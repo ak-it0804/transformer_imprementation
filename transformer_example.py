@@ -129,7 +129,7 @@ def train():
         data, targets = get_batch(train_data,i)
         optimizer.zero_grad()
         if data.size(0) != bptt:
-            src_mask = model.generate_square_subsequent_mask(data.size(0).to(device))
+            src_mask = model.generate_square_subsequent_mask(data.size(0)).to(device)
         output = model(data,src_mask)
         loss = criterion(output.view(-1, ntokens),targets)
         loss.backward()
@@ -156,13 +156,13 @@ def evaluate(eval_model, data_source):
     total_loss = 0.
     src_mask = model.generate_square_subsequent_mask(bptt).to(device)
     with torch.no_grad():
-        for i in range(0, data_source(0) -1 , bptt):
+        for i in range(0, data_source.size(0) -1 , bptt):
             data, targets = get_batch(data_source, i)
             if data.size(0) != bptt:
                 src_mask = model.generate_square_subsequent_mask(data.size(0)).to(device)
-                output = eval_model(data, src_mask)
-                output_flat = output.view(-1,ntokens)
-                total_loss += len(data) * criterion(output_flat,targets).item()
+            output = eval_model(data, src_mask)
+            output_flat = output.view(-1,ntokens)
+            total_loss += len(data) * criterion(output_flat,targets).item()
     return total_loss / (len(data_source) -1)
 
 best_val_loss = float("inf")
@@ -181,7 +181,7 @@ for epoch in range(1, epochs + 1):
 
     if val_loss < best_val_loss:
         best_val_loss = val_loss
-        best_model = mdoel
+        best_model = model
 
     scheduler.stop()
 
